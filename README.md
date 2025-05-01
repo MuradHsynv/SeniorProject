@@ -19,3 +19,7 @@ source cv_env/bin/activate (for Mac/Linux)
 4. Install the essential libraries:
 
 pip install tensorflow tensorflow-hub opencv-python numpy matplotlib
+
+5. Run the test file:
+
+python .\models\test_tflite.py
