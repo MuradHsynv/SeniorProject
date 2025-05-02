@@ -1,3 +1,5 @@
+For Testing of Detection function of the model: (Project file)
+
 1. Go into CV Module directory:
 
 cd ./Project/cv_Module
@@ -23,3 +25,19 @@ pip install tensorflow tensorflow-hub opencv-python numpy matplotlib
 5. Run the test file:
 
 python .\models\test_tflite.py
+
+
+For setup of MobileApp:
+
+1. Create the React Native project
+
+npx @react-native-community/cli init MobileApp --version 0.72.6
+
+2. Go into cd MobileApp and install Tensor Flow library
+
+npm install react-native-fast-tflite
+
+3. Install react-native-vision-camera through npm:
+
+npm i react-native-vision-camera
+
