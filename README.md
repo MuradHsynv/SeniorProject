@@ -31,13 +31,25 @@ For setup of MobileApp:
 
 1. Create the React Native project
 
-npx @react-native-community/cli init MobileApp --version 0.72.6
+npx @react-native-community/cli init MobileApp
 
 2. Go into cd MobileApp and install Tensor Flow library
 
 npm install react-native-fast-tflite
 
-3. Install react-native-vision-camera through npm:
+3. Install react-native-vision-camera through npm and follow the guides for further setups:
 
-npm i react-native-vision-camera
+npm install react-native-vision-camera react-native-reanimated react-native-worklets-core
 
+https://react-native-vision-camera.com/docs/guides
+https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/
+
+4. Add our model tflite file to MobileApp/android/app/src/main/assets/ (create assets folder if needed)
+
+5. Keep metro running in terminal: 
+
+npx react-native start --reset-cache
+
+6. Run on Android in another terminal:
+
+npx react-native run-android
