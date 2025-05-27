@@ -1,0 +1,26 @@
+<annotation>
+	<folder>images</folder>
+	<filename>VID-20250521-WA0006_frame_0001.png</filename>
+	<path>C:\Users\murat\SeniorProject\Data\Frames\images\VID-20250521-WA0006_frame_0001.png</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>480</width>
+		<height>848</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>power_button</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>257</xmin>
+			<ymin>334</ymin>
+			<xmax>315</xmax>
+			<ymax>385</ymax>
+		</bndbox>
+	</object>
+</annotation>

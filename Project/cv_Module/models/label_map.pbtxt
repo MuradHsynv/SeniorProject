@@ -1,0 +1,72 @@
+item {
+  id: 1
+  name: 'power_button'
+}
+item {
+  id: 2
+  name: 'steam_indicator'  
+}
+item {
+  id: 3
+  name: 'warning_indicator'
+}
+item {
+  id: 4
+  name: 'control_panel'    
+}
+item {
+  id: 5
+  name: 'lungo_button'
+}
+item {
+  id: 6
+  name: 'hot_foam_button'
+}
+item {
+  id: 7
+  name: 'hot_milk_button'
+}
+item {
+  id: 8
+  name: 'espresso_button'
+}
+item {
+  id: 9
+  name: 'latte_macchiato_button'
+}
+item {
+  id: 10
+  name: 'caffe_latte_button'
+}
+item {
+  id: 11
+  name: 'ristretto_button'
+}
+item {
+  id: 12
+  name: 'cappuccino_button'
+}
+item {
+  id: 13
+  name: 'flat_white_button'
+}
+item {
+  id: 14
+  name: 'water_reservoir'
+}
+item {
+  id: 15
+  name: 'coffee_dispenser'
+}
+item {
+  id: 16
+  name: 'drip_tray'
+}
+item {
+  id: 17
+  name: 'milk_frother_wand'
+}
+item {
+    id: 18
+    name: 'power_cord'
+}
