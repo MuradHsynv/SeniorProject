@@ -46,19 +46,3 @@ State Management: React Context API
 Storage: @react-native-async-storage/async-storage
 Device Features: expo-camera, expo-speech, expo-haptics
 Future Integration: TensorFlow Lite (EfficientDet) for object detection.
-
-📂 Project Structure
-
-CoffeeMachineAssistantExpo/
-├── assets/                 # Images and future model files
-├── src/
-│   ├── context/
-│   │   ├── GlobalSettings.js   # Manages app settings & persistence
-│   │   └── GuidanceContext.js  # The "Brain": State machine for step-by-step logic
-│   ├── screens/
-│   │   ├── HomeScreen.js       # Landing page & navigation
-│   │   ├── CameraScreen.js     # Main guidance loop & simulation UI
-│   │   └── SettingsScreen.js   # User preference configuration
-│   └── ...
-├── App.js                  # Entry point & Navigation setup
-└── ...
