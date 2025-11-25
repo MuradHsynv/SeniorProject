@@ -16,7 +16,9 @@ npm install
 npx expo start
 
 --- Coffee Machine Assistant for the Visually Impaired ☕📱---
+
 A Computer Vision-Based Mobile Application for Independent Living
+
 TED University - Senior Project (CMPE 491)
 
 📖 Abstract:
