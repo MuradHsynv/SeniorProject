@@ -1,0 +1,52 @@
+description: Ultralytics best model trained on C:\Users\bedir\OneDrive\Masaüstü\ModelTraining-12/data.yaml
+author: Ultralytics
+date: '2025-12-09T00:29:44.348972'
+version: 8.3.235
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+batch: 1
+imgsz:
+- 640
+- 640
+names:
+  0: caffe_latte_button
+  1: caffe_latte_buttonrotation
+  2: cappuccino_button
+  3: cappuccino_buttonrotation
+  4: coffee_dispenser
+  5: coffee_dispenserrotation
+  6: descale
+  7: descalerotation
+  8: drip_tray
+  9: drip_trayrotation
+  10: espresso_button
+  11: espresso_buttonrotation
+  12: flat_white_button
+  13: flat_white_buttonrotation
+  14: hot_foam_button
+  15: hot_foam_buttonrotation
+  16: hot_milk_button
+  17: hot_milk_buttonrotation
+  18: latte_macchiato_button
+  19: latte_macchiato_buttonrotation
+  20: lungo_button
+  21: lungo_buttonrotation
+  22: milk_frother_wand
+  23: milk_frother_wandrotation
+  24: power
+  25: powerrotation
+  26: rinse
+  27: rinserotation
+  28: ristretto_button
+  29: ristretto_buttonrotation
+  30: water_reservoir
+  31: water_reservoirrotation
+args:
+  batch: 1
+  fraction: 1.0
+  half: false
+  int8: false
+  nms: true
+channels: 3
