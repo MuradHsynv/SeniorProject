@@ -25,7 +25,7 @@
         }
 
         html {
-            scroll-behavior: smooth; /* Smooth scrolling when clicking links */
+            scroll-behavior: smooth;
         }
 
         body {
@@ -37,7 +37,7 @@
             background-color: #f5f5f5;
         }
 
-        /* Accessibility: Focus states for keyboard navigation */
+        /* Accessibility: Focus states */
         a:focus, button:focus {
             outline: 3px solid var(--accent-color);
             outline-offset: 2px;
@@ -55,7 +55,7 @@
             color: white;
             padding: 1rem 0;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            position: sticky; /* Keeps nav visible */
+            position: sticky;
             top: 0;
             z-index: 1000;
         }
@@ -123,6 +123,33 @@
             opacity: 0.9;
         }
 
+        /* GitHub Button in Hero */
+        .btn-github {
+            display: inline-flex;
+            align-items: center;
+            background-color: white;
+            color: var(--primary-color);
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn-github:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+            background-color: #f8f9fa;
+        }
+
+        .btn-github svg {
+            margin-right: 8px;
+            height: 20px;
+            width: 20px;
+            fill: var(--primary-color);
+        }
+
         /* Project details */
         .project-details {
             padding: 4rem 0;
@@ -133,7 +160,7 @@
             margin-bottom: 4rem;
         }
 
-        /* Improved Team Grid */
+        /* Team Grid */
         .team-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -141,7 +168,9 @@
             margin-top: 1.5rem;
         }
 
-        .team-card {
+        /* Team Cards are now Links */
+        a.team-card {
+            display: block; /* Makes the anchor tag a block element */
             background-color: var(--light-color);
             padding: 1.5rem;
             border-radius: 8px;
@@ -149,12 +178,23 @@
             font-weight: bold;
             color: var(--primary-color);
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
+            transition: transform 0.2s, background-color 0.2s;
+            text-decoration: none; /* Removes underline */
+            position: relative;
         }
 
-        .team-card:hover {
+        a.team-card:hover {
             transform: translateY(-3px);
             background-color: #e9ecef;
+            color: var(--primary-dark);
+        }
+
+        /* Add a small icon to indicate it's a profile/link */
+        a.team-card::after {
+            content: "↗"; /* simple arrow */
+            font-size: 0.8rem;
+            margin-left: 5px;
+            opacity: 0.5;
         }
 
         /* Reports section */
@@ -181,10 +221,9 @@
             height: 100%; 
         }
 
-        /* Special style for Thesis - Gold Border only, NO full width */
+        /* Special style for Thesis */
         .report-card.thesis {
             border: 2px solid var(--accent-color);
-            /* grid-column: 1 / -1;  <-- REMOVED to keep it in grid flow */
         }
         
         .report-card:hover {
@@ -202,7 +241,6 @@
             font-size: 3rem;
         }
 
-        /* Special dark header for Thesis card only */
         .report-card.thesis .report-img {
             background-color: var(--dark-color); 
         }
@@ -301,25 +339,11 @@
             text-decoration: underline;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
-            nav {
-                flex-direction: column;
-            }
-
-            nav ul {
-                margin-top: 1rem;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            nav ul li {
-                margin: 0.5rem;
-            }
-
-            .hero h1 {
-                font-size: 2rem;
-            }
+            nav { flex-direction: column; }
+            nav ul { margin-top: 1rem; flex-wrap: wrap; justify-content: center; }
+            nav ul li { margin: 0.5rem; }
+            .hero h1 { font-size: 2rem; }
         }
     </style>
 </head>
@@ -347,6 +371,11 @@
             <div class="hero-content">
                 <h1>Coffee Machine Assistance<br>for the Visually Impaired</h1>
                 <p>An innovative mobile application for accurate, real-time recognition of coffee machines with voice-guided instructions.</p>
+                
+                <a href="https://github.com/MuradHsynv/SeniorProject" target="_blank" class="btn-github">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.6.11.793-.26.793-.577v-2.234c-3.338.724-4.042-1.61-4.042-1.61-.546-1.386-1.332-1.755-1.332-1.755-1.09-.744.082-.729.082-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.42-1.305.763-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22v3.293c0 .31.19.69.8.57C20.565 21.795 24 17.295 24 12c0-6.627-5.373-12-12-12z"/></svg>
+                    View on GitHub
+                </a>
             </div>
         </div>
     </section>
@@ -370,10 +399,18 @@
             <div class="team-info" id="team">
                 <h2>Project Team</h2>
                 <div class="team-grid">
-                    <div class="team-card">Murad Huseynov</div>
-                    <div class="team-card">Bedir Esen</div>
-                    <div class="team-card">Alperen Dalgıç</div>
-                    <div class="team-card">Hazem Mustafa</div>
+                    <a href="https://www.linkedin.com/in/murad-huseynov957/" target="_blank" class="team-card">
+                        Murad Huseynov
+                    </a>
+                    <a href="https://www.linkedin.com/in/bedir-esen-10b331223/" target="_blank" class="team-card">
+                        Bedir Esen
+                    </a>
+                    <a href="https://www.linkedin.com/in/alperen-dalg%C4%B1%C3%A7-92a3072ba/" target="_blank" class="team-card">
+                        Alperen Dalgıç
+                    </a>
+                    <a href="https://www.linkedin.com/in/hazem-moustafa-774b04276/" target="_blank" class="team-card">
+                        Hazem Mustafa
+                    </a>
                 </div>
             </div>
         </div>
@@ -422,7 +459,8 @@
                 </div>
                 
                 <div class="report-card">
-                    <div class="report-img">🧩</div> <div class="report-content">
+                    <div class="report-img">🧩</div>
+                    <div class="report-content">
                         <h3>Low-Level Design</h3>
                         <p>Detailed component specifications, class models, algorithms, and internal logic.</p>
                         <a href="Reports/lld-report.pdf" class="btn">View Report</a>
@@ -430,7 +468,8 @@
                 </div>
                 
                 <div class="report-card">
-                    <div class="report-img">🧪</div> <div class="report-content">
+                    <div class="report-img">🧪</div>
+                    <div class="report-content">
                         <h3>Test Plan Report</h3>
                         <p>Testing strategy, test cases, validation methods, and quality assurance procedures.</p>
                         <a href="Reports/tp-report.pdf" class="btn">View Report</a>
@@ -493,7 +532,7 @@
                     <a href="#home">Home</a>
                     <a href="#project">Project</a>
                     <a href="#reports">Reports</a>
-                    <a href="#team">Team</a>
+                    <a href="https://github.com/MuradHsynv/SeniorProject" target="_blank">GitHub</a>
                 </div>
                 <p>© 2025 Coffee Machine Assistance for the Visually Impaired. All rights reserved.</p>
             </div>
