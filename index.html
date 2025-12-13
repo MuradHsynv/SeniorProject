@@ -104,7 +104,6 @@
 
         /* Hero section */
         .hero {
-            /* Changed from placeholder image to professional gradient */
             background: linear-gradient(135deg, var(--dark-color), var(--primary-color));
             color: white;
             padding: 6rem 0;
@@ -182,10 +181,10 @@
             height: 100%; 
         }
 
-        /* Special style for Thesis */
+        /* Special style for Thesis - Gold Border only, NO full width */
         .report-card.thesis {
             border: 2px solid var(--accent-color);
-            grid-column: 1 / -1; /* Spans full width */
+            /* grid-column: 1 / -1;  <-- REMOVED to keep it in grid flow */
         }
         
         .report-card:hover {
@@ -203,8 +202,9 @@
             font-size: 3rem;
         }
 
+        /* Special dark header for Thesis card only */
         .report-card.thesis .report-img {
-            background-color: var(--dark-color); /* Darker header for thesis */
+            background-color: var(--dark-color); 
         }
 
         .report-content {
