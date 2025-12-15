@@ -3,9 +3,19 @@ import { View, Text, StyleSheet } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera'; 
 import { useTensorflowModel } from 'react-native-fast-tflite';
 import * as Speech from 'expo-speech';
-import * as ImageManipulator from 'expo-image-manipulator'; // NEW IMPORT
-import { Buffer } from 'buffer'; // Ensure you ran: npm install buffer
+import * as ImageManipulator from 'expo-image-manipulator';
 import { DRINK_RECIPES, getFingerGuidance } from '../utils/coffeeLogic';
+
+// --- ROBUST CONVERTER (Replaces 'buffer' library to prevent crashes) ---
+function base64ToUint8Array(base64) {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
 
 export default function CameraScreen({ route }) {
   const { selectedDrink } = route.params; 
@@ -19,15 +29,15 @@ export default function CameraScreen({ route }) {
   const [stepIndex, setStepIndex] = useState(0);
   const [debugMsg, setDebugMsg] = useState("Initializing...");
   const isProcessing = useRef(false);
-  const lastSpoken = useRef(0);
+  const lastSpokenRef = useRef(0);
 
-  // Initial Instruction
+  // 1. Initial Instruction
   useEffect(() => {
     const step = DRINK_RECIPES[selectedDrink].steps[stepIndex];
     if (step) Speech.speak(step.instruction);
   }, [stepIndex]);
 
-  // THE LOOP
+  // 2. THE DETECTION LOOP
   useEffect(() => {
     if (!permission?.granted) requestPermission();
 
@@ -36,72 +46,83 @@ export default function CameraScreen({ route }) {
 
       isProcessing.current = true; 
       try {
-        // 1. Take Picture (Fastest mode)
+        // A. Take Snapshot (Fastest settings)
         const photo = await cameraRef.current.takePictureAsync({ 
-          quality: 0.3,
+          quality: 0.5,
           skipProcessing: true 
         });
 
-        // 2. RESIZE IMAGE (Crucial Fix for "no ArrayBuffer" error)
-        // We resize to 320x320 because that's usually what models want.
-        // If your model needs 224x224 or 640x640, change these numbers!
+        // B. RESIZE to 640x640 (Critical for YOLO)
         const resized = await ImageManipulator.manipulateAsync(
           photo.uri,
           [{ resize: { width: 640, height: 640 } }], 
           { base64: true, format: ImageManipulator.SaveFormat.JPEG }
         );
 
-        // 3. Convert Base64 -> Uint8Array
-        const binary = Buffer.from(resized.base64, 'base64');
-        const uint8 = new Uint8Array(binary);
+        // C. Convert Base64 -> Uint8Array (Using manual helper)
+        const uint8 = base64ToUint8Array(resized.base64);
 
-        // 4. PREPARE INPUT TENSOR
-        // We need to know if the model wants Float32 or Uint8.
-        // Most Object Detection models want Uint8, but let's be safe.
-        let inputTensor;
-        if (model.inputs[0].dataType === 'float32') {
-           // Convert [0-255] integer to [0.0-1.0] float if required
-           const float32 = new Float32Array(uint8.length);
-           for (let i = 0; i < uint8.length; i++) {
-             float32[i] = uint8[i] / 255.0; 
-           }
-           inputTensor = float32;
-        } else {
-           // Model likely wants Uint8 (Integers)
-           inputTensor = uint8;
-        }
+        // D. RUN MODEL
+        const detections = model.run(uint8); 
 
-        // 5. RUN MODEL
-        const detections = model.run([inputTensor]); 
-
-        // 6. Run Logic
-        runLogic(detections, 640, 640); // Pass the resized dimensions!
+        // E. Run Guidance Logic
+        runLogic(detections);
 
       } catch (e) {
-        console.log("Detection Loop Error:", e);
+        console.log("Loop Error:", e);
       } finally {
         isProcessing.current = false; 
       }
-    }, 1000); 
+    }, 1000); // Runs every 1 second
 
     return () => clearInterval(intervalId);
   }, [model, stepIndex]); 
 
-  const runLogic = (detections, width, height) => {
-    // ... (Your Logic Code Here - same as before) ...
+  // 3. THE BRAIN (Logic Engine)
+  const runLogic = (detections) => {
     const now = Date.now();
     const currentStep = DRINK_RECIPES[selectedDrink].steps[stepIndex];
-    const HAND_LABEL = 'finger';
+    const HAND_LABEL = 'finger'; // Ensure this matches your labels.txt
 
-    // Note: detections might be an object or array depending on model type.
-    // Assuming standard array of objects output:
-    // If detections is not an array (e.g. it's a map), you might need: detections[0]
+    if (!detections) return;
+
+    // 1. Find the Machine Button (Target)
+    const target = detections.find(d => d.label.startsWith(currentStep.target) && d.confidence > 0.4);
     
-    // Safety check for empty detections
-    if (!detections || detections.length === 0) return;
+    // 2. Find the User's Hand
+    const hand = detections.find(d => d.label === HAND_LABEL && d.confidence > 0.4);
 
-    // ... Rest of your logic ...
-    // Copy the logic block from the previous response here
+    if (!target) {
+      // Case A: Can't see the button
+      if (now - lastSpokenRef.current > 5000) {
+        setDebugMsg(`Looking for ${currentStep.target}...`);
+        Speech.speak(`Cannot see ${currentStep.target.replace('_', ' ')}. Move camera slowly.`);
+        lastSpokenRef.current = now;
+      }
+    } else if (target && hand) {
+      // Case B: GPS Mode (We see both)
+      const guidance = getFingerGuidance(hand.boundingBox, target.boundingBox);
+      setDebugMsg(guidance);
+      
+      if (now - lastSpokenRef.current > 2000) {
+        Speech.speak(guidance);
+        lastSpokenRef.current = now;
+        
+        // If "Press down", wait a bit then move to next step
+        if (guidance.includes("Press")) {
+           if (stepIndex < DRINK_RECIPES[selectedDrink].steps.length - 1) {
+             setTimeout(() => setStepIndex(prev => prev + 1), 4000);
+           }
+        }
+      }
+    } else {
+       // Case C: Target found, but no hand
+       if (now - lastSpokenRef.current > 5000) {
+          setDebugMsg("Show Hand");
+          Speech.speak("Button found. Please show me your hand.");
+          lastSpokenRef.current = now;
+       }
+    }
   };
 
   if (!permission?.granted) return <View />;

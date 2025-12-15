@@ -54,8 +54,7 @@
             "backgroundColor": "#000000"
           }
         }
-      ],
-      "react-native-fast-tflite"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
