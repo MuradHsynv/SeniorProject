@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { SettingsContext } from './GlobalSettings';
 
-// Define Steps
 const STEPS = {
   STEP_0_FIND_MACHINE: 'STEP_0_FIND_MACHINE',
   STEP_1_FIND_POWER: 'STEP_1_FIND_POWER',
@@ -10,10 +9,10 @@ const STEPS = {
   STEP_4_COMPLETED: 'STEP_4_COMPLETED',
 };
 
-// Guidance Logic using REAL labels from your metadata
+// Guidance Logic
 const GUIDANCE_LOGIC = {
   [STEPS.STEP_0_FIND_MACHINE]: {
-    target: 'coffee_dispenser', // Proxy for "Machine"
+    target: 'coffee_dispenser',
     instruction: {
       simple: 'Machine found. Find power button.',
       detailed: 'I see the coffee dispenser. You are facing the machine. Now locate the power button.',
@@ -37,7 +36,7 @@ const GUIDANCE_LOGIC = {
     nextStep: STEPS.STEP_3_FIND_BREW_BUTTON,
   },
   [STEPS.STEP_3_FIND_BREW_BUTTON]: {
-    target: 'espresso_button', // Specific brew button
+    target: 'espresso_button', 
     instruction: {
       simple: 'Espresso button found. Press it.',
       detailed: 'Espresso button detected. Place your cup and press it to start.',
@@ -73,7 +72,7 @@ export const GuidanceProvider = ({ children }) => {
       return { instruction: msg, advance: false };
     }
 
-    // Success Case (Check partial match for rotation labels like "powerrotation")
+    // Success Case 
     if (detection === stepLogic.target || detection.includes(stepLogic.target)) {
       setCurrentStep(stepLogic.nextStep);
       return { 

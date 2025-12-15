@@ -1,12 +1,12 @@
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Define keys for storage
+// keys for storage
 const VOICE_SPEED_KEY = '@settings_voiceSpeed';
 const HAPTIC_KEY = '@settings_hapticFeedback';
 const DETAILED_KEY = '@settings_detailedInstructions';
 
-// Provide default values for the context
+// default values
 const defaultState = {
   isLoading: true,
   voiceSpeed: 1.0,
@@ -17,10 +17,9 @@ const defaultState = {
   updateDetailedInstructions: () => {},
 };
 
-// Create the context
 export const SettingsContext = createContext(defaultState);
 
-// Create the provider component
+// provider component
 export const SettingsProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [voiceSpeed, setVoiceSpeed] = useState(1.0);
@@ -55,8 +54,6 @@ export const SettingsProvider = ({ children }) => {
 
     loadSettings();
   }, []);
-
-  // --- Create functions that save to state AND storage ---
 
   const updateVoiceSpeed = async (value) => {
     try {

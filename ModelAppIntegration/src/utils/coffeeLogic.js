@@ -1,4 +1,3 @@
-// --- 1. VECTOR MATH (The "GPS" Logic) ---
 export const getFingerGuidance = (fingerBox, targetBox) => {
   // Find centers
   const fingerX = fingerBox.left + (fingerBox.width / 2);
@@ -12,12 +11,10 @@ export const getFingerGuidance = (fingerBox, targetBox) => {
   // Calculate distance in pixels
   const distance = Math.sqrt(dx*dx + dy*dy);
   
-  // THRESHOLD: How close is "close enough"? 
-  // (Adjust based on your camera resolution, 80px is a good start)
+  // THRESHOLD 
   if (distance < 80) return "You are on it. Press down.";
 
   // Determine dominant direction
-  // We want to give ONE clear instruction, not "Move Up and Left"
   if (Math.abs(dx) > Math.abs(dy)) {
     // Horizontal gap is bigger
     return dx > 0 ? "Move Right" : "Move Left";
@@ -27,8 +24,6 @@ export const getFingerGuidance = (fingerBox, targetBox) => {
   }
 };
 
-// --- 2. RECIPES (The 7 Options) ---
-// Note: We reuse "power" and "drip_tray" for almost all of them.
 export const DRINK_RECIPES = {
   espresso: {
     name: "Espresso",

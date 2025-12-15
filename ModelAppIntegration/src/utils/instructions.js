@@ -1,5 +1,3 @@
-// src/utils/instructions.js
-
 export const instructions = {
   power: {
     name: 'Power Button',
@@ -62,7 +60,6 @@ export const instructions = {
   },
 };
 
-// Step-by-step coffee making process
 export const makeCoffeeSteps = [
   {
     step: 1,

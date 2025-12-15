@@ -10,7 +10,7 @@ import {
   StatusBar
 } from 'react-native';
 import * as Speech from 'expo-speech';
-import { Ionicons } from '@expo/vector-icons'; // Built-in icon set in Expo
+import { Ionicons } from '@expo/vector-icons'; 
 
 // The 7 Drink Options
 const DRINK_OPTIONS = [
@@ -25,19 +25,18 @@ const DRINK_OPTIONS = [
 
 export default function HomeScreen({ navigation }) {
 
-  // SINGLE TAP: Announce the name for accessibility
+  // Single tap: Read the name
   const handlePress = (item) => {
     Speech.stop();
     Speech.speak(item.name);
   };
 
-  // LONG PRESS: Confirm selection and go to Camera
+  // Long press: Confirm selection
   const handleConfirm = (item) => {
     Speech.stop();
     Speech.speak(`${item.name} selected. Loading camera.`);
     
-    // Navigate to CameraScreen defined in your App.js
-    // passing the 'selectedDrink' ID (e.g., 'espresso')
+    // Navigate to CameraScreen and pass selectedDrink
     navigation.navigate('CameraScreen', { selectedDrink: item.id });
   };
 
@@ -51,7 +50,6 @@ export default function HomeScreen({ navigation }) {
     >
       <Text style={[
         styles.text, 
-        // Use dark text for light backgrounds (Hot Milk/Flat White)
         ['hot_milk', 'flat_white'].includes(item.id) ? { color: '#333' } : { color: 'white' }
       ]}>
         {item.name.toUpperCase()}
@@ -61,7 +59,6 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Custom Header since App.js has headerShown: false */}
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>Select Drink</Text>
@@ -96,7 +93,7 @@ const styles = StyleSheet.create({
   },
   header: { 
     padding: 20, 
-    backgroundColor: '#6B4423', // Matches your App.js theme color
+    backgroundColor: '#6B4423', 
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -108,7 +105,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   row: {
-    height: 120, // Tall rows for easy touching
+    height: 120, 
     justifyContent: 'center',
     alignItems: 'center',
     borderBottomWidth: 1,

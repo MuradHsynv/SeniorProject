@@ -1,4 +1,3 @@
-// src/services/ModelService.js
 import { TFLite } from 'react-native-fast-tflite';
 import * as FileSystem from 'expo-file-system';
 import { Asset } from 'expo-asset';

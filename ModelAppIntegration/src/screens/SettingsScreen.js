@@ -17,12 +17,9 @@ export default function SettingsScreen() {
     detailedInstructions,
     updateVoiceSpeed,
     updateDetailedInstructions,
-    updateHapticFeedback, // Imported to force it ON
+    updateHapticFeedback,
   } = useContext(SettingsContext);
 
-  // Requirement: "Make it on all the time"
-  // We force Haptic Feedback to TRUE whenever this screen opens,
-  // and we removed the UI toggle so it cannot be turned off.
   useEffect(() => {
     updateHapticFeedback(true);
   }, []);
@@ -39,7 +36,7 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text style={styles.headerTitle}>Preferences</Text>
 
-        {/* 1. Voice Speed Slider */}
+        {/* Voice Speed Slider */}
         <View style={styles.itemContainer}>
           <View style={styles.rowLabel}>
             <Text style={styles.label}>Voice Speed</Text>
@@ -65,7 +62,7 @@ export default function SettingsScreen() {
 
         <View style={styles.divider} />
 
-        {/* 2. Detailed Instructions Switch */}
+        {/* Detailed Instructions Switch */}
         <View style={[styles.itemContainer, styles.rowBetween]}>
           <View style={{ flex: 1, paddingRight: 10 }}>
             <Text style={styles.label}>Detailed Instructions</Text>
@@ -110,7 +107,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
-    elevation: 2, // Android shadow
+    elevation: 2, 
   },
   headerTitle: {
     fontSize: 18,

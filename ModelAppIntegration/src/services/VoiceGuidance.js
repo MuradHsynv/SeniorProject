@@ -1,4 +1,3 @@
-// src/services/VoiceGuidance.js
 import { instructions } from '../utils/instructions';
 
 class VoiceGuidance {
@@ -12,7 +11,7 @@ class VoiceGuidance {
       return 'No coffee machine components detected. Please adjust your camera angle.';
     }
 
-    // Get highest confidence detection
+    // Highest confidence detection
     const primaryDetection = detections.reduce((prev, current) =>
       prev.confidence > current.confidence ? prev : current
     );
@@ -20,7 +19,7 @@ class VoiceGuidance {
     const component = primaryDetection.class;
     this.detectedComponents.add(component);
 
-    // Get instruction for this component
+    // Get instruction
     const instruction = instructions[component];
     
     if (instruction) {
@@ -33,12 +32,12 @@ class VoiceGuidance {
   getGeneralGuidance(detections) {
     const components = detections.map(d => d.class);
     
-    // Check for power button first
+    // power button first
     if (components.includes('power')) {
       return 'Power button located. Press to turn on the machine.';
     }
 
-    // Check for espresso/coffee buttons
+    // espresso/coffee buttons
     const coffeeButtons = ['espresso_button', 'lungo_button', 'ristretto_button', 
                            'cappuccino_button', 'flat_white_button'];
     const hasCoffeeButton = components.some(c => coffeeButtons.includes(c));
@@ -47,7 +46,7 @@ class VoiceGuidance {
       return 'Coffee selection buttons detected. Choose your preferred coffee type.';
     }
 
-    // Check for maintenance
+    // maintenance
     const maintenanceButtons = ['descale', 'rinse'];
     const hasMaintenance = components.some(c => maintenanceButtons.includes(c));
     
@@ -82,7 +81,7 @@ class VoiceGuidance {
   }
 
   getComponentLocation(bbox) {
-    // Convert bbox to clock position for better accessibility
+    // bbox to clock position for better accessibility
     const [ymin, xmin, ymax, xmax] = bbox;
     const centerX = (xmin + xmax) / 2;
     const centerY = (ymin + ymax) / 2;
