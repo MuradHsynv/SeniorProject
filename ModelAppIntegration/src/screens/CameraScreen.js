@@ -1,429 +1,128 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { useIsFocused } from '@react-navigation/native';
-import { Asset } from 'expo-asset';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import * as Speech from 'expo-speech';
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  Vibration,
-  View,
-} from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera'; 
 import { useTensorflowModel } from 'react-native-fast-tflite';
+import * as Speech from 'expo-speech';
+import * as ImageManipulator from 'expo-image-manipulator'; // NEW IMPORT
+import { Buffer } from 'buffer'; // Ensure you ran: npm install buffer
+import { DRINK_RECIPES, getFingerGuidance } from '../utils/coffeeLogic';
 
-import { SettingsContext } from '../context/GlobalSettings';
-import { useGuidance } from '../context/GuidanceContext';
-
-// Model Assets
-const MODEL_ASSET = require('../../assets/models/model.tflite');
-const LABELS_ASSET = require('../../assets/models/labels.txt');
-
-export default function CameraScreen({ navigation }) {
+export default function CameraScreen({ route }) {
+  const { selectedDrink } = route.params; 
   const [permission, requestPermission] = useCameraPermissions();
-  const [isDetecting, setIsDetecting] = useState(false);
-  const [statusText, setStatusText] = useState('Loading model...');
-  const [labels, setLabels] = useState([]);
-
-  // TFLite Model Hook
-  const model = useTensorflowModel(MODEL_ASSET);
-
-  const mockDetectionRef = useRef(null);
-  const detectionInterval = useRef(null);
   const cameraRef = useRef(null);
-  const isProcessing = useRef(false);
-
-  const isFocused = useIsFocused();
-  const { voiceSpeed, hapticFeedback } = useContext(SettingsContext);
-  const guidance = useGuidance();
-
-  // Load Labels
-  useEffect(() => {
-    const loadLabels = async () => {
-      try {
-        const labelsAsset = Asset.fromModule(LABELS_ASSET);
-        await labelsAsset.downloadAsync();
-        const response = await fetch(labelsAsset.uri);
-        const text = await response.text();
-        const labelsList = text.split('\n').map(l => l.trim()).filter(Boolean);
-        setLabels(labelsList);
-        console.log('Labels loaded:', labelsList);
-      } catch (err) {
-        console.error('Error loading labels:', err);
-      }
-    };
-    loadLabels();
-  }, []);
-
-  // Check Model Status
-  useEffect(() => {
-    if (model.state === 'loaded') {
-      console.log('Model loaded successfully');
-      setStatusText('Model ready. Point at machine.');
-    } else if (model.state === 'loading') {
-      setStatusText('Loading model...');
-    } else if (model.state === 'error') {
-      console.error('Model loading error:', model.error);
-      setStatusText('Error loading model.');
-    }
-  }, [model.state]);
-
-  // Core AI Detection Function
-  const runModelOnFrame = async () => {
-    if (model.state !== 'loaded' || !cameraRef.current || isProcessing.current) {
-      return;
-    }
-    
-    isProcessing.current = true;
-
-    try {
-      // Capture image from camera
-      const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.5,
-        skipProcessing: true,
-      });
-
-      // Run TFLite model on the image
-      // Adjust input shape based on your model (common: 320x320, 640x640)
-      const outputs = model.model.runSync([{
-        data: photo.uri,
-        dataType: 'uint8',
-        shape: [1, 320, 320, 3] // Adjust to your model's input shape
-      }]);
-
-      // Parse outputs (adjust based on your model's output format)
-      // Common object detection outputs:
-      // outputs[0] = detection_boxes [1, N, 4]
-      // outputs[1] = detection_classes [1, N]
-      // outputs[2] = detection_scores [1, N]
-      // outputs[3] = num_detections [1]
-
-      const detectionScores = outputs[2]; // Scores
-      const detectionClasses = outputs[1]; // Classes
-      
-      // Find best detection above confidence threshold
-      let bestLabel = null;
-      let highestScore = 0;
-      const CONFIDENCE_THRESHOLD = 0.6; // 60% confidence
-
-      // Iterate through detections
-      for (let i = 0; i < detectionScores.length; i++) {
-        const score = detectionScores[i];
-        if (score > CONFIDENCE_THRESHOLD && score > highestScore) {
-          highestScore = score;
-          const classIndex = Math.floor(detectionClasses[i]);
-          
-          // Handle label indexing (some models start at 0, some at 1)
-          if (classIndex >= 0 && classIndex < labels.length) {
-            bestLabel = labels[classIndex];
-          }
-        }
-      }
-
-      // Log detection for debugging
-      if (bestLabel) {
-        console.log(`Detected: ${bestLabel} (${(highestScore * 100).toFixed(1)}%)`);
-      }
-
-      // Send result to guidance system
-      handleDetectionResult(bestLabel);
-
-    } catch (error) {
-      console.error("Detection error:", error);
-      setStatusText(`Detection error: ${error.message}`);
-    } finally {
-      isProcessing.current = false;
-    }
-  };
-
-  // Process Detection Result
-  const handleDetectionResult = (detectedItem) => {
-    const item = mockDetectionRef.current || detectedItem;
-
-    const { instruction, advance } = guidance.getInstruction(item);
-
-    if (instruction) {
-      // Speak instruction for visually impaired users
-      Speech.speak(instruction, { rate: voiceSpeed });
-      setStatusText(instruction);
-    }
-
-    // Haptic feedback for confirmation
-    if (hapticFeedback && advance) {
-      Vibration.vibrate(50); // Success vibration
-    } else if (hapticFeedback && item && !advance) {
-      Vibration.vibrate([10, 50]); // Attention vibration
-    }
-    
-    mockDetectionRef.current = null;
-  };
-
-  // Camera Ready Effect
-  useEffect(() => {
-    if (isFocused && permission?.granted && model.state === 'loaded') {
-      Speech.speak('Camera ready. Tap Start.', { rate: voiceSpeed });
-    } else {
-      Speech.stop();
-      if (detectionInterval.current) {
-        clearInterval(detectionInterval.current);
-      }
-      setIsDetecting(false);
-    }
-    return () => {
-      if (detectionInterval.current) {
-        clearInterval(detectionInterval.current);
-      }
-    };
-  }, [isFocused, permission?.granted, voiceSpeed, model.state]);
-
-  // Detection Loop Effect
-  useEffect(() => {
-    if (isDetecting && model.state === 'loaded') {
-      // Run detection every 1 second for real-time guidance
-      // Adjust interval based on model speed and user testing
-      detectionInterval.current = setInterval(runModelOnFrame, 1000);
-    } else {
-      if (detectionInterval.current) {
-        clearInterval(detectionInterval.current);
-      }
-    }
-    return () => {
-      if (detectionInterval.current) {
-        clearInterval(detectionInterval.current);
-      }
-    };
-  }, [isDetecting, model.state]);
-
-  // Toggle Detection Handler
-  const toggleDetection = () => {
-    if (model.state !== 'loaded') {
-      Speech.speak("Model is still loading, please wait.", { rate: voiceSpeed });
-      return;
-    }
-    
-    if (hapticFeedback) Vibration.vibrate(50);
-    const newState = !isDetecting;
-    setIsDetecting(newState);
-    
-    if (newState) {
-      const resetMsg = guidance.resetGuidance();
-      Speech.speak(`Started detection. ${resetMsg}`, { rate: voiceSpeed });
-      setStatusText("Detecting...");
-    } else {
-      Speech.speak("Detection stopped.", { rate: voiceSpeed });
-      setStatusText("Stopped.");
-    }
-  };
   
-  const handleGoBack = () => {
-    if (hapticFeedback) Vibration.vibrate(50);
-    Speech.stop();
-    navigation.goBack();
+  // Load Model
+  const tflite = useTensorflowModel(require('../../assets/models/model.tflite'));
+  const model = tflite.state === "loaded" ? tflite.model : undefined;
+
+  const [stepIndex, setStepIndex] = useState(0);
+  const [debugMsg, setDebugMsg] = useState("Initializing...");
+  const isProcessing = useRef(false);
+  const lastSpoken = useRef(0);
+
+  // Initial Instruction
+  useEffect(() => {
+    const step = DRINK_RECIPES[selectedDrink].steps[stepIndex];
+    if (step) Speech.speak(step.instruction);
+  }, [stepIndex]);
+
+  // THE LOOP
+  useEffect(() => {
+    if (!permission?.granted) requestPermission();
+
+    const intervalId = setInterval(async () => {
+      if (!model || !cameraRef.current || isProcessing.current) return;
+
+      isProcessing.current = true; 
+      try {
+        // 1. Take Picture (Fastest mode)
+        const photo = await cameraRef.current.takePictureAsync({ 
+          quality: 0.3,
+          skipProcessing: true 
+        });
+
+        // 2. RESIZE IMAGE (Crucial Fix for "no ArrayBuffer" error)
+        // We resize to 320x320 because that's usually what models want.
+        // If your model needs 224x224 or 640x640, change these numbers!
+        const resized = await ImageManipulator.manipulateAsync(
+          photo.uri,
+          [{ resize: { width: 640, height: 640 } }], 
+          { base64: true, format: ImageManipulator.SaveFormat.JPEG }
+        );
+
+        // 3. Convert Base64 -> Uint8Array
+        const binary = Buffer.from(resized.base64, 'base64');
+        const uint8 = new Uint8Array(binary);
+
+        // 4. PREPARE INPUT TENSOR
+        // We need to know if the model wants Float32 or Uint8.
+        // Most Object Detection models want Uint8, but let's be safe.
+        let inputTensor;
+        if (model.inputs[0].dataType === 'float32') {
+           // Convert [0-255] integer to [0.0-1.0] float if required
+           const float32 = new Float32Array(uint8.length);
+           for (let i = 0; i < uint8.length; i++) {
+             float32[i] = uint8[i] / 255.0; 
+           }
+           inputTensor = float32;
+        } else {
+           // Model likely wants Uint8 (Integers)
+           inputTensor = uint8;
+        }
+
+        // 5. RUN MODEL
+        const detections = model.run([inputTensor]); 
+
+        // 6. Run Logic
+        runLogic(detections, 640, 640); // Pass the resized dimensions!
+
+      } catch (e) {
+        console.log("Detection Loop Error:", e);
+      } finally {
+        isProcessing.current = false; 
+      }
+    }, 1000); 
+
+    return () => clearInterval(intervalId);
+  }, [model, stepIndex]); 
+
+  const runLogic = (detections, width, height) => {
+    // ... (Your Logic Code Here - same as before) ...
+    const now = Date.now();
+    const currentStep = DRINK_RECIPES[selectedDrink].steps[stepIndex];
+    const HAND_LABEL = 'finger';
+
+    // Note: detections might be an object or array depending on model type.
+    // Assuming standard array of objects output:
+    // If detections is not an array (e.g. it's a map), you might need: detections[0]
+    
+    // Safety check for empty detections
+    if (!detections || detections.length === 0) return;
+
+    // ... Rest of your logic ...
+    // Copy the logic block from the previous response here
   };
 
-  // Simulation for testing (remove in production)
-  const simulateDetection = (item) => {
-    mockDetectionRef.current = item;
-    setStatusText(`Testing: ${item}`);
-  };
-
-  // Permission Handling
-  if (!permission) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.statusText}>Checking camera permissions...</Text>
-      </View>
-    );
-  }
-
-  if (!permission.granted) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.statusText}>Camera access is required</Text>
-        <TouchableOpacity 
-          style={styles.permissionButton} 
-          onPress={requestPermission}
-        >
-          <Text style={styles.permissionButtonText}>Grant Camera Access</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  if (!permission?.granted) return <View />;
 
   return (
-    <View style={styles.container}>
-      {isFocused && (
-        <CameraView style={styles.camera} facing="back" ref={cameraRef}>
-          <View style={styles.overlay}>
-            {/* Status Display */}
-            <View style={styles.statusContainer}>
-              <Text style={styles.statusText}>{statusText}</Text>
-              {model.state === 'loading' && (
-                <Text style={styles.subStatusText}>Preparing AI model...</Text>
-              )}
-            </View>
-
-            {/* Test Buttons (Remove in Production) */}
-            {__DEV__ && (
-              <View style={styles.simulationContainer}>
-                <TouchableOpacity 
-                  style={styles.simButton} 
-                  onPress={() => simulateDetection('coffee_machine')}
-                >
-                  <Text style={styles.simButtonText}>Test: Machine</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.simButton} 
-                  onPress={() => simulateDetection('power_button')}
-                >
-                  <Text style={styles.simButtonText}>Test: Power</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.simButton} 
-                  onPress={() => simulateDetection('water_reservoir')}
-                >
-                  <Text style={styles.simButtonText}>Test: Water</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* Camera Controls */}
-            <View style={styles.controlsContainer}>
-              <TouchableOpacity 
-                style={styles.controlButton} 
-                onPress={handleGoBack}
-                accessible={true}
-                accessibilityLabel="Close camera"
-              >
-                <MaterialIcons name="close" size={30} color="#FFF" />
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[
-                  styles.captureButton, 
-                  isDetecting && styles.captureButtonActive,
-                  model.state !== 'loaded' && styles.captureButtonDisabled
-                ]} 
-                onPress={toggleDetection}
-                disabled={model.state !== 'loaded'}
-                accessible={true}
-                accessibilityLabel={isDetecting ? "Stop detection" : "Start detection"}
-              >
-                <MaterialIcons 
-                  name={isDetecting ? 'stop' : 'play-arrow'} 
-                  size={40} 
-                  color="#FFF" 
-                />
-              </TouchableOpacity>
-              
-              <View style={styles.controlButton} />
-            </View>
-          </View>
-        </CameraView>
-      )}
+    <View style={{flex: 1}}>
+      <CameraView 
+        style={StyleSheet.absoluteFill} 
+        facing="back"
+        ref={cameraRef}
+      />
+      <View style={styles.overlay}>
+        <Text style={styles.text}>{DRINK_RECIPES[selectedDrink].name} - Step {stepIndex + 1}</Text>
+        <Text style={styles.guidance}>{debugMsg}</Text>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#000', 
-    justifyContent: 'center', 
-    alignItems: 'center' 
-  },
-  camera: { 
-    flex: 1, 
-    width: '100%' 
-  },
-  overlay: { 
-    flex: 1, 
-    backgroundColor: 'transparent', 
-    justifyContent: 'space-between' 
-  },
-  statusContainer: { 
-    backgroundColor: 'rgba(0,0,0,0.7)', 
-    padding: 20, 
-    marginTop: 60, 
-    marginHorizontal: 20, 
-    borderRadius: 10 
-  },
-  statusText: { 
-    color: '#FFF', 
-    fontSize: 20, 
-    fontWeight: 'bold',
-    textAlign: 'center' 
-  },
-  subStatusText: {
-    color: '#CCC',
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: 5
-  },
-  simulationContainer: { 
-    position: 'absolute', 
-    top: 180, 
-    left: 10, 
-    right: 10, 
-    flexDirection: 'row', 
-    justifyContent: 'center', 
-    gap: 8, 
-    flexWrap: 'wrap' 
-  },
-  simButton: { 
-    backgroundColor: 'rgba(255, 255, 0, 0.6)', 
-    padding: 8, 
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#FFD700'
-  },
-  simButtonText: { 
-    color: '#000', 
-    fontWeight: 'bold', 
-    fontSize: 12 
-  },
-  controlsContainer: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    paddingBottom: 40, 
-    paddingHorizontal: 30 
-  },
-  captureButton: { 
-    backgroundColor: '#6B4423', 
-    width: 80, 
-    height: 80, 
-    borderRadius: 40, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    borderWidth: 4, 
-    borderColor: '#FFF' 
-  },
-  captureButtonActive: { 
-    backgroundColor: '#C00' 
-  },
-  captureButtonDisabled: {
-    backgroundColor: '#555',
-    opacity: 0.5
-  },
-  controlButton: { 
-    backgroundColor: 'rgba(0,0,0,0.6)', 
-    width: 60, 
-    height: 60, 
-    borderRadius: 30, 
-    justifyContent: 'center', 
-    alignItems: 'center' 
-  },
-  permissionButton: {
-    backgroundColor: '#6B4423',
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  permissionButtonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+  overlay: { position: 'absolute', bottom: 40, width: '100%', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: 15 },
+  text: { color: '#FFD700', fontSize: 16, fontWeight: 'bold' },
+  guidance: { color: 'white', fontSize: 24, fontWeight: 'bold', marginTop: 5 }
 });

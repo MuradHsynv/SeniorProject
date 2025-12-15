@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,143 +7,90 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import * as Speech from 'expo-speech';
-
-// Import from the new file name: GlobalSettings.js
 import { SettingsContext } from '../context/GlobalSettings';
 
 export default function SettingsScreen() {
-  // Get values AND the new update functions from context
   const {
     voiceSpeed,
-    hapticFeedback,
     detailedInstructions,
     updateVoiceSpeed,
-    updateHapticFeedback,
     updateDetailedInstructions,
+    updateHapticFeedback, // Imported to force it ON
   } = useContext(SettingsContext);
 
+  // Requirement: "Make it on all the time"
+  // We force Haptic Feedback to TRUE whenever this screen opens,
+  // and we removed the UI toggle so it cannot be turned off.
+  useEffect(() => {
+    updateHapticFeedback(true);
+  }, []);
+
   const testVoice = () => {
-    Speech.speak('This is a test of the voice guidance system', {
-      rate: voiceSpeed, 
-    });
+    Speech.stop();
+    Speech.speak('Voice speed check.', { rate: voiceSpeed });
   };
 
   return (
     <ScrollView style={styles.container}>
-      {/* Voice Settings */}
+      
+      {/* Voice Preferences Section */}
       <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <MaterialIcons name="record-voice-over" size={24} color="#6B4423" />
-          <Text style={styles.sectionTitle}>Voice Settings</Text>
-        </View>
+        <Text style={styles.headerTitle}>Preferences</Text>
 
-        {/* Voice Speed */}
-        <View
-          style={styles.settingItem}
-          accessible={true}
-          accessibilityLabel={`Voice Speed, ${voiceSpeed.toFixed(1)}x`}>
-          <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Voice Speed</Text>
-            <Text style={styles.settingValue}>{voiceSpeed.toFixed(1)}x</Text>
+        {/* 1. Voice Speed Slider */}
+        <View style={styles.itemContainer}>
+          <View style={styles.rowLabel}>
+            <Text style={styles.label}>Voice Speed</Text>
+            <Text style={styles.value}>{voiceSpeed.toFixed(1)}x</Text>
           </View>
+          
           <Slider
             style={styles.slider}
             minimumValue={0.5}
             maximumValue={2.0}
             step={0.1}
             value={voiceSpeed}
-            // Use the new update function
             onValueChange={updateVoiceSpeed}
             minimumTrackTintColor="#6B4423"
             maximumTrackTintColor="#DDD"
             thumbTintColor="#6B4423"
-            accessibilityRole="adjustable"
-            accessibilityHint="Adjusts the speed of the voice guidance. Swipe up to increase, down to decrease."
           />
-          <View style={styles.sliderLabels}>
-            <Text style={styles.sliderLabel}>Slower</Text>
-            <Text style={styles.sliderLabel}>Faster</Text>
-          </View>
-
-          <TouchableOpacity
-            style={styles.testButton}
-            onPress={testVoice}
-            accessible={true}
-            accessibilityLabel="Test Voice"
-            accessibilityHint="Plays a test sentence at the currently selected voice speed"
-            accessibilityRole="button">
-            <MaterialIcons name="volume-up" size={20} color="#6B4423" />
-            <Text style={styles.testButtonText}>Test Voice</Text>
+          
+          <TouchableOpacity style={styles.testBtn} onPress={testVoice}>
+            <Text style={styles.testBtnText}>Test Audio</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Detailed Instructions */}
-        <View style={styles.settingRow}>
-          <View style={styles.settingTextContainer}>
-            <Text style={styles.settingLabel}>Detailed Instructions</Text>
-            <Text style={styles.settingDescription}>
-              Get comprehensive guidance for each step
+        <View style={styles.divider} />
+
+        {/* 2. Detailed Instructions Switch */}
+        <View style={[styles.itemContainer, styles.rowBetween]}>
+          <View style={{ flex: 1, paddingRight: 10 }}>
+            <Text style={styles.label}>Detailed Instructions</Text>
+            <Text style={styles.subLabel}>
+              Provide extra guidance steps
             </Text>
           </View>
           <Switch
             trackColor={{ false: '#DDD', true: '#A67C52' }}
             thumbColor={detailedInstructions ? '#6B4423' : '#f4f3f4'}
-            // Use the new update function
             onValueChange={updateDetailedInstructions}
             value={detailedInstructions}
-            accessible={true}
-            accessibilityLabel="Detailed Instructions"
-            accessibilityHint="Toggles between simple and detailed voice instructions"
-            accessibilityRole="switch"
           />
         </View>
       </View>
 
-      {/* Accessibility Settings */}
+      {/* Info Section */}
       <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <MaterialIcons name="accessibility" size={24} color="#6B4423" />
-          <Text style={styles.sectionTitle}>Accessibility</Text>
-        </View>
-
-        <View style={styles.settingRow}>
-          <View style={styles.settingTextContainer}>
-            <Text style={styles.settingLabel}>Haptic Feedback</Text>
-            <Text style={styles.settingDescription}>
-              Vibration feedback for actions
-            </Text>
-          </View>
-          <Switch
-            trackColor={{ false: '#DDD', true: '#A67C52' }}
-            thumbColor={hapticFeedback ? '#6B4423' : '#f4f3f4'}
-            // Use the new update function
-            onValueChange={updateHapticFeedback}
-            value={hapticFeedback}
-            accessible={true}
-            accessibilityLabel="Haptic Feedback"
-            accessibilityHint="Toggles vibration feedback on or off for button presses and detections"
-            accessibilityRole="switch"
-          />
+        <Text style={styles.headerTitle}>About</Text>
+        <View style={styles.itemContainer}>
+          <Text style={styles.infoText}>Coffee Machine Assistant v1.0</Text>
+          <Text style={styles.infoText}>TEDU Senior Project 2025</Text>
         </View>
       </View>
 
-      {/* About */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <MaterialIcons name="info" size={24} color="#6B4423" />
-          <Text style={styles.sectionTitle}>About</Text>
-        </View>
-        <View
-          style={styles.aboutContainer}
-          accessible={true}
-          accessibilityLabel="About this app">
-          <Text style={styles.aboutText}>Coffee Machine Assistant v1.0</Text>
-          <Text style={styles.aboutText}>TEDU Senior Project 2025</Text>
-        </View>
-      </View>
     </ScrollView>
   );
 }
@@ -151,66 +98,51 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F9F9F9',
+    padding: 20,
   },
   section: {
-    backgroundColor: '#FFF',
-    marginVertical: 10,
-    marginHorizontal: 15,
+    backgroundColor: 'white',
+    borderRadius: 12,
     padding: 20,
-    borderRadius: 10,
+    marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2, // Android shadow
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  sectionTitle: {
-    fontSize: 20,
+  headerTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#6B4423',
-    marginLeft: 10,
+    marginBottom: 15,
   },
-  settingItem: {
-    marginVertical: 15,
+  itemContainer: {
+    marginVertical: 5,
   },
-  settingRow: {
+  rowLabel: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginVertical: 15,
-    minHeight: 48, 
-  },
-  settingInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 10,
   },
-  settingTextContainer: {
-    flex: 1,
-    marginRight: 15,
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  settingLabel: {
-    fontSize: 17,
+  label: {
+    fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 5,
   },
-  settingDescription: {
-    fontSize: 14,
-    color: '#666',
+  subLabel: {
+    fontSize: 13,
+    color: '#888',
+    marginTop: 2,
   },
-  settingValue: {
-    fontSize: 17,
+  value: {
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#6B4423',
   },
@@ -218,39 +150,26 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 40,
   },
-  sliderLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  testBtn: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#F0EBE7',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginTop: 5,
   },
-  sliderLabel: {
-    fontSize: 12,
-    color: '#999',
-  },
-  testButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F5F5FF',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginTop: 15,
-    borderWidth: 1,
-    borderColor: '#6B4423',
-  },
-  testButtonText: {
+  testBtnText: {
     color: '#6B4423',
-    fontSize: 14,
     fontWeight: '600',
-    marginLeft: 8,
-  },
-  aboutContainer: {
-    paddingVertical: 10,
-  },
-  aboutText: {
     fontSize: 14,
-    color: '#333',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#EEE',
+    marginVertical: 15,
+  },
+  infoText: {
+    color: '#555',
     marginBottom: 5,
-    lineHeight: 20,
   },
 });

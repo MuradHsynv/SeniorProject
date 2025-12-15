@@ -1,196 +1,118 @@
-import React, { useContext, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Vibration,
-  SafeAreaView,
+import React from 'react';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  FlatList, 
+  StyleSheet, 
+  SafeAreaView, 
   Platform,
+  StatusBar
 } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
 import * as Speech from 'expo-speech';
-import { useIsFocused } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons'; // Built-in icon set in Expo
 
-import { SettingsContext } from '../context/GlobalSettings';
+// The 7 Drink Options
+const DRINK_OPTIONS = [
+  { id: 'espresso', name: 'Espresso', color: '#4b3621' },
+  { id: 'lungo', name: 'Lungo', color: '#8b4513' },
+  { id: 'ristretto', name: 'Ristretto', color: '#3e2723' },
+  { id: 'cappuccino', name: 'Cappuccino', color: '#cd853f' },
+  { id: 'caffe_latte', name: 'Caffe Latte', color: '#d2b48c' },
+  { id: 'flat_white', name: 'Flat White', color: '#f5deb3' },
+  { id: 'hot_milk', name: 'Hot Milk', color: '#fff8dc' },
+];
 
 export default function HomeScreen({ navigation }) {
-  // Get settings from the global context
-  const { hapticFeedback, voiceSpeed } = useContext(SettingsContext);
-  const isFocused = useIsFocused();
 
-  // Announce the screen when it comes into focus
-  useEffect(() => {
-    if (isFocused) {
-      Speech.speak(
-        'Welcome to the Coffee Machine Assistant. Tap the Start button in the middle of the screen to begin guidance, or tap Settings at the bottom.',
-        {
-          rate: voiceSpeed,
-        },
-      );
-    } else {
-      Speech.stop();
-    }
-  }, [isFocused, voiceSpeed]);
-
-  // Helper function to trigger haptics based on settings
-  const triggerHaptic = () => {
-    if (hapticFeedback) {
-      Vibration.vibrate(50);
-    }
+  // SINGLE TAP: Announce the name for accessibility
+  const handlePress = (item) => {
+    Speech.stop();
+    Speech.speak(item.name);
   };
 
-  const handleStartPress = () => {
-    triggerHaptic();
-    navigation.navigate('CameraScreen');
+  // LONG PRESS: Confirm selection and go to Camera
+  const handleConfirm = (item) => {
+    Speech.stop();
+    Speech.speak(`${item.name} selected. Loading camera.`);
+    
+    // Navigate to CameraScreen defined in your App.js
+    // passing the 'selectedDrink' ID (e.g., 'espresso')
+    navigation.navigate('CameraScreen', { selectedDrink: item.id });
   };
 
-  const handleSettingsPress = () => {
-    triggerHaptic();
-    navigation.navigate('SettingsScreen');
-  };
+  const renderItem = ({ item }) => (
+    <TouchableOpacity 
+      style={[styles.row, { backgroundColor: item.color }]} 
+      activeOpacity={0.8}
+      onPress={() => handlePress(item)}       
+      onLongPress={() => handleConfirm(item)} 
+      delayLongPress={500}
+    >
+      <Text style={[
+        styles.text, 
+        // Use dark text for light backgrounds (Hot Milk/Flat White)
+        ['hot_milk', 'flat_white'].includes(item.id) ? { color: '#333' } : { color: 'white' }
+      ]}>
+        {item.name.toUpperCase()}
+      </Text>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Welcome Section */}
-      <View
-        style={styles.welcomeContainer}
-        accessible={true}
-        accessibilityLabel="Welcome Section">
-        <MaterialIcons name="local-cafe" size={80} color="#6B4423" />
-        <Text style={styles.title}>Coffee Machine{'\n'}Assistant</Text>
-        <Text style={styles.subtitle}>
-          Voice-guided coffee making{'\n'}for independent operation
-        </Text>
-      </View>
-
-      {/* Buttons */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.startButton}
-          onPress={handleStartPress}
-          accessible={true}
-          accessibilityLabel="Start"
-          accessibilityHint="Starts the camera to begin coffee machine guidance"
-          accessibilityRole="button">
-          <MaterialIcons name="play-circle-filled" size={50} color="#FFF" />
-          <Text style={styles.startButtonText}>Start</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={handleSettingsPress}
-          accessible={true}
+      {/* Custom Header since App.js has headerShown: false */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.headerTitle}>Select Drink</Text>
+          <Text style={styles.headerSubtitle}>Tap to hear, Hold to select</Text>
+        </View>
+        
+        {/* Settings Button */}
+        <TouchableOpacity 
+          style={styles.settingsButton}
+          onPress={() => navigation.navigate('SettingsScreen')}
           accessibilityLabel="Settings"
-          accessibilityHint="Opens the settings screen for voice speed, haptics, and instructions"
-          accessibilityRole="button">
-          <MaterialIcons name="settings" size={30} color="#6B4423" />
-          <Text style={styles.secondaryButtonText}>Settings</Text>
+        >
+          <Ionicons name="settings-sharp" size={28} color="white" />
         </TouchableOpacity>
       </View>
 
-      {/* Instructions */}
-      <View
-        style={styles.instructionsContainer}
-        accessible={true}
-        accessibilityLabel="Quick Start Instructions">
-        <Text style={styles.instructionsTitle}>Quick Start:</Text>
-        <Text style={styles.instructionsText}>
-          1. Tap the Start button{'\n'}
-          2. Point camera at coffee machine{'\n'}
-          3. Follow voice instructions
-        </Text>
-      </View>
+      <FlatList 
+        data={DRINK_OPTIONS}
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
+        contentContainerStyle={{ flexGrow: 1 }}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-    padding: 20,
-    justifyContent: 'space-around',
-    paddingTop: Platform.OS === 'android' ? 40 : 20,
+  container: { 
+    flex: 1, 
+    backgroundColor: '#f5f5f5',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 
   },
-  welcomeContainer: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#6B4423',
-    textAlign: 'center',
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-  },
-  buttonContainer: {
-    alignItems: 'center',
-    gap: 20,
-  },
-  startButton: {
-    backgroundColor: '#6B4423',
+  header: { 
+    padding: 20, 
+    backgroundColor: '#6B4423', // Matches your App.js theme color
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    elevation: 4,
+  },
+  headerTitle: { color: 'white', fontSize: 24, fontWeight: 'bold' },
+  headerSubtitle: { color: '#ddd', fontSize: 14, marginTop: 5 },
+  settingsButton: {
+    padding: 10,
+  },
+  row: {
+    height: 120, // Tall rows for easy touching
     justifyContent: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 40,
-    borderRadius: 15,
-    width: '80%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    minHeight: 80,
-  },
-  startButtonText: {
-    color: '#FFF',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginLeft: 15,
-  },
-  secondaryButton: {
-    backgroundColor: '#FFF',
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#6B4423',
-    width: '80%',
-    minHeight: 60,
+    borderBottomWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)'
   },
-  secondaryButtonText: {
-    color: '#6B4423',
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 10,
-  },
-  instructionsContainer: {
-    backgroundColor: '#FFF',
-    padding: 20,
-    borderRadius: 10,
-    borderLeftWidth: 4,
-    borderLeftColor: '#6B4423',
-  },
-  instructionsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#6B4423',
-    marginBottom: 10,
-  },
-  instructionsText: {
-    fontSize: 16,
-    color: '#333',
-    lineHeight: 24,
-  },
+  text: { fontSize: 28, fontWeight: 'bold', letterSpacing: 1 }
 });
