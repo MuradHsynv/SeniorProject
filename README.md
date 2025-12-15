@@ -8,11 +8,13 @@ Expo Go app installed on your Android/iOS device.
 
 Installation
 1. Clone the repository:
-git clone [https://github.com/your-username/coffee-machine-assistant.git](https://github.com/your-username/coffee-machine-assistant.git)
-cd coffee-machine-assistant
+git clone https://github.com/MuradHsynv/SeniorProject
+cd ModelAppIntegration
 2. Install dependencies:
 npm install
-3. Start the server:
+3. Build the app:
+npx eas build --platform android --profile development
+4. Start the server:
 npx expo start
 
 --- Coffee Machine Assistant for the Visually Impaired ☕📱---
