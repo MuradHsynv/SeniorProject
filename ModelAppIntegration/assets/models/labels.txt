@@ -10,6 +10,7 @@ drip_tray
 drip_trayrotation
 espresso_button
 espresso_buttonrotation
+finger
 flat_white_button
 flat_white_buttonrotation
 hot_foam_button

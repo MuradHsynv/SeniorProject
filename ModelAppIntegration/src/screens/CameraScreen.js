@@ -16,7 +16,7 @@ const LABELS = [
   "lungo_button", "lungo_buttonrotation", "milk_frother_wand", "milk_frother_wandrotation",
   "power", "powerrotation", "rinse", "rinserotation",
   "ristretto_button", "ristretto_buttonrotation", "water_reservoir", "water_reservoirrotation",
-  // "finger" //
+  "finger"
 ];
 
 // Robust Converter
@@ -37,16 +37,23 @@ function decodeNMSOutput(data, imgWidth, imgHeight) {
   const stride = 6; 
   
   for (let i = 0; i < data.length; i += stride) {
-    // Extract raw values
     const x1 = data[i];
     const y1 = data[i+1];
     const x2 = data[i+2];
     const y2 = data[i+3];
-    // const batchId = data[i+4]; // Unused
+    // const batchId = data[i+4]; 
     const classId = data[i+5];
 
-    // Filter invalid detections
+    // 1. Sanity Check: Invalid Class
     if (classId < 0 || classId >= LABELS.length) continue;
+
+    // 2. Sanity Check: Box Size
+    // If the box is impossibly small (e.g., < 1% of screen), it's noise.
+    if ((x2 - x1) < 0.02 || (y2 - y1) < 0.02) continue;
+
+    // 3. Sanity Check: Edge Hallucinations
+    // If a box is stuck perfectly to the edge (0.0 or 1.0), it's usually a glitch.
+    if (x1 < 0.01 || x2 > 0.99 || y1 < 0.01 || y2 > 0.99) continue;
 
     // Calculate dimensions
     const width = (x2 - x1) * imgWidth;
@@ -57,12 +64,7 @@ function decodeNMSOutput(data, imgWidth, imgHeight) {
     results.push({
       label: LABELS[classId],
       confidence: 1.0, 
-      boundingBox: {
-        left: left,
-        top: top,
-        width: width,
-        height: height
-      }
+      boundingBox: { left, top, width, height }
     });
   }
   return results;
@@ -108,12 +110,14 @@ export default function CameraScreen({ route }) {
         
         // Run Model
         const output = await model.run([uint8]); 
+        console.log(output)
         const rawData = output[0] ? output[0] : output; 
 
         // Decode using NMS logic
         const detections = decodeNMSOutput(rawData, 640, 640);
         
         runLogic(detections);
+      
 
       } catch (e) {
         console.log("Loop Error:", e);
@@ -125,14 +129,20 @@ export default function CameraScreen({ route }) {
     return () => clearInterval(intervalId);
   }, [model, stepIndex]); 
 
-  const runLogic = (detections) => {
-    if (!detections) return;
+const runLogic = (detections) => {
+    // 1. Safety Check: If detections is null/empty, stop immediately.
+    if (!detections || detections.length === 0) return;
 
     const currentStep = DRINK_RECIPES[selectedDrink].steps[stepIndex];
     
-    // Find Target
+    // 2. Debug Log: See exactly what the camera sees (helps you test!)
+    // console.log("Detected:", detections.map(d => d.label)); 
+
+    const HAND_LABEL = 'finger'; 
+
+    // 3. Find Target (Safe check)
+    // We add "d.label &&" to ensure we don't crash if a label is missing
     const target = detections.find(d => d.label && d.label.startsWith(currentStep.target));
-    
     // Center of Screen acts as our finger for now
     const virtualFinger = {
       left: 320 - 25, // Center X (640/2)

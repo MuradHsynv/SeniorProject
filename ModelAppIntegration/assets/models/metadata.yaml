@@ -1,7 +1,7 @@
-description: Ultralytics best model trained on C:\Users\bedir\OneDrive\Masaüstü\ModelTraining-12/data.yaml
+description: Ultralytics best model trained on C:\Users\murat\CMA_project\SeniorProject\ModelTraining-13/data.yaml
 author: Ultralytics
-date: '2025-12-09T00:29:44.348972'
-version: 8.3.235
+date: '2025-12-18T22:21:10.880021'
+version: 8.3.240
 license: AGPL-3.0 License (https://ultralytics.com/license)
 docs: https://docs.ultralytics.com
 stride: 32
@@ -23,26 +23,27 @@ names:
   9: drip_trayrotation
   10: espresso_button
   11: espresso_buttonrotation
-  12: flat_white_button
-  13: flat_white_buttonrotation
-  14: hot_foam_button
-  15: hot_foam_buttonrotation
-  16: hot_milk_button
-  17: hot_milk_buttonrotation
-  18: latte_macchiato_button
-  19: latte_macchiato_buttonrotation
-  20: lungo_button
-  21: lungo_buttonrotation
-  22: milk_frother_wand
-  23: milk_frother_wandrotation
-  24: power
-  25: powerrotation
-  26: rinse
-  27: rinserotation
-  28: ristretto_button
-  29: ristretto_buttonrotation
-  30: water_reservoir
-  31: water_reservoirrotation
+  12: finger
+  13: flat_white_button
+  14: flat_white_buttonrotation
+  15: hot_foam_button
+  16: hot_foam_buttonrotation
+  17: hot_milk_button
+  18: hot_milk_buttonrotation
+  19: latte_macchiato_button
+  20: latte_macchiato_buttonrotation
+  21: lungo_button
+  22: lungo_buttonrotation
+  23: milk_frother_wand
+  24: milk_frother_wandrotation
+  25: power
+  26: powerrotation
+  27: rinse
+  28: rinserotation
+  29: ristretto_button
+  30: ristretto_buttonrotation
+  31: water_reservoir
+  32: water_reservoirrotation
 args:
   batch: 1
   fraction: 1.0
